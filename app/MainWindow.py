@@ -16,8 +16,18 @@ class MainWindow(QtWidgets.QWidget):
     mainLayout.addLayout(hbar)
     hbar.addWidget(QtWidgets.QLabel('Account:'))
     self.account = QtWidgets.QComboBox()
-    self.account.currentIndexChanged.connect(self.updatePaymentsList)
+    self.account.currentIndexChanged.connect(lambda: self.payments.setAccount(self.getAccount()))
     hbar.addWidget(self.account)
+
+    hbar = QtWidgets.QHBoxLayout()
+    hbar.addWidget(QtWidgets.QLabel('Search:'))
+    self.searchText = QtWidgets.QLineEdit()
+    self.searchText.returnPressed.connect(lambda: self.searchButton.clicked.emit())
+    self.searchButton = QtWidgets.QPushButton('Go')
+    self.searchButton.clicked.connect(lambda: self.payments.setSearchString(self.searchText.text()))
+    hbar.addWidget(self.searchText)
+    hbar.addWidget(self.searchButton)
+    mainLayout.addLayout(hbar)
 
     hbar = QtWidgets.QHBoxLayout()
     mainLayout.addLayout(hbar)
@@ -32,7 +42,3 @@ class MainWindow(QtWidgets.QWidget):
 
   def getAccount(self):
     return api.paymentaccounts()[self.account.currentIndex()]
-
-  def updatePaymentsList(self):
-    account = self.getAccount()
-    self.payments.setAccount(account)

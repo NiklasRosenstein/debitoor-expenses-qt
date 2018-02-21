@@ -12,10 +12,11 @@ class PaymentsListModel(QtCore.QAbstractItemModel):
     ('Description', 'text')
   ]
 
-  def __init__(self, account):
+  def __init__(self, account, searchString):
     super().__init__()
     self.account = account
-    self.data = account.transactions()
+    self.searchString = searchString
+    self.data = account.transactions(search=searchString)
     self.data.sort(key=lambda x: x['date'], reverse=True)
 
   def index(self, row, column, parent):
@@ -54,6 +55,8 @@ class PaymentsView(QtWidgets.QTableView):
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
+    self._account = None
+    self._searchString = None
     self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
     self.customContextMenuRequested.connect(self._onContextMenu)
     self.horizontalHeader().setStretchLastSection(True)
@@ -101,6 +104,14 @@ class PaymentsView(QtWidgets.QTableView):
     for index in sorted(rows):
       yield model.data[index]
 
-  def setAccount(self, account):
-    model = PaymentsListModel(account)
+  def _updateModel(self):
+    model = PaymentsListModel(self._account, self._searchString)
     self.setModel(model)
+
+  def setAccount(self, account):
+    self._account = account
+    self._updateModel()
+
+  def setSearchString(self, search):
+    self._searchString = search
+    self._updateModel()
