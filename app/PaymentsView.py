@@ -43,6 +43,8 @@ class PaymentsListModel(QtCore.QAbstractItemModel):
       transaction = self.data[index.row()]
       if key == 'category':
         return ', '.join(transaction.types())
+      elif key == 'amount':
+        return '%.2f %s' % (float(transaction[key]), transaction['currency'])
       else:
         return str(transaction.get(key, ''))
     return None
