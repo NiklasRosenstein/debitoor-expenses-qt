@@ -1,15 +1,30 @@
 
 import json
+import string
 from Qt import QtCore, QtWidgets
+
+
+def render_string(fmt, data):
+  class Accessor(object):
+    def __getitem__(self, key):
+      result = data
+      for part in key.split('.'):
+        if not isinstance(result, dict) or part not in result:
+          raise KeyError(key)
+        result = result[part]
+      return result
+  class Template(string.Template):
+    idpattern = r'(?-i:[_a-zA-Z][_a-zA-Z0-9\.]*)'
+  return Template(fmt).safe_substitute(Accessor())
 
 
 class PaymentsListModel(QtCore.QAbstractItemModel):
 
   COLUMNS = [
-    ('Amount', 'amount'),
-    ('Category', 'category'),
-    ('Date', 'date'),
-    ('Description', 'text')
+    ('Amount', None),
+    ('Category', '${category}'),
+    ('Date', '${date}'),
+    ('Description', '${otherParty.name}, ${text}')
   ]
 
   def __init__(self, account, searchString):
@@ -40,14 +55,14 @@ class PaymentsListModel(QtCore.QAbstractItemModel):
 
   def data(self, index, role):
     if role == QtCore.Qt.DisplayRole:
-      key = self.COLUMNS[index.column()][1]
+      colname, fmt = self.COLUMNS[index.column()]
       transaction = self.data[index.row()]
-      if key == 'category':
-        return ', '.join(transaction.types())
-      elif key == 'amount':
-        return '%.2f %s' % (float(transaction[key]), transaction['currency'])
-      else:
-        return str(transaction.get(key, ''))
+      if colname == 'Amount':
+        return '%.2f %s' % (float(transaction['amount']), transaction['currency'])
+
+      data = transaction.json()
+      data['category'] = ', '.join(transaction.types())
+      return render_string(fmt, data)
     return None
 
 

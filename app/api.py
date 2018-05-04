@@ -1,4 +1,5 @@
 
+import copy
 import json
 import os
 import requests
@@ -32,11 +33,17 @@ class _Object:
   def __getitem__(self, key):
     return self.data[key]
 
-  def to_json(self):
-    return self.data
+  def json(self, create_copy=True):
+    return copy.deepcopy(self.data) if create_copy else self.data
 
   def get(self, key, default=None):
     return self.data.get(key, default)
+
+  def copy(self):
+    return type(self)(copy.copy(self.data))
+
+  def deepcopy(self):
+    return type(self)(copy.deepcopy(self.data))
 
 
 class PaymentAccount(_Object):
